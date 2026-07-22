@@ -21,8 +21,8 @@ except ImportError:
     _ssl_context = ssl.create_default_context()
 
 app = Flask(__name__)
-CORS(app, resources={r"/api/*": {"origins": "http://localhost:5173"}}, supports_credentials=True)
-
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:5173")
+CORS(app, resources={r"/api/*": {"origins": [FRONTEND_URL, "http://localhost:5173"]}}, supports_credentials=True)
 TMDB_API_KEY = os.environ.get("TMDB_API_KEY")
 TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w500"
 

@@ -4,3 +4,4 @@ firebase-admin
 python-dotenv
 certifi
 scikit-learn
+gunicorn
