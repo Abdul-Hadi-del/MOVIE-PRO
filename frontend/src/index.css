@@ -1,0 +1,61 @@
+@import "tailwindcss";
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes loading-bar {
+  0% { left: -33%; }
+  100% { left: 100%; }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 3s linear infinite;
+}
+
+.animate-loading-bar {
+  animation: loading-bar 1.2s ease-in-out infinite;
+}
+
+/* Light mode overrides */
+html.light body {
+  background-color: #f4f4f5;
+}
+
+html.light .bg-black {
+  background-color: #f4f4f5 !important;
+}
+
+html.light .bg-zinc-900,
+html.light .bg-zinc-900\/50 {
+  background-color: #ffffff !important;
+}
+
+html.light .bg-zinc-800,
+html.light .bg-zinc-800\/50,
+html.light .bg-zinc-800\/30 {
+  background-color: #e4e4e7 !important;
+}
+
+html.light .border-zinc-900,
+html.light .border-zinc-800,
+html.light .border-zinc-700 {
+  border-color: #d4d4d8 !important;
+}
+
+html.light .text-white {
+  color: #18181b !important;
+}
+
+html.light .text-zinc-400 {
+  color: #52525b !important;
+}
+
+html.light .text-zinc-500 {
+  color: #71717a !important;
+}
+
+html.light .text-zinc-300 {
+  color: #3f3f46 !important;
+}

@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MovieSort Pro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0E0E12;
+    --surface: #1A1A22;
+    --surface-2: #21212B;
+    --gold: #E8B339;
+    --gold-dim: #6b5524;
+    --ink: #F2EFE9;
+    --ink-dim: #9A98A3;
+    --teal: #5EC8C1;
+    --danger: #D9534F;
+    --line: #2C2C38;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Archivo', sans-serif;
+    min-height: 100vh;
+  }
+
+  /* subtle film-grain / sprocket texture on the edges */
+  body::before, body::after {
+    content: "";
+    position: fixed;
+    top: 0; bottom: 0;
+    width: 18px;
+    background-image: repeating-linear-gradient(
+      to bottom, var(--surface) 0 10px, transparent 10px 22px
+    );
+    opacity: 0.5;
+    z-index: 0;
+  }
+  body::before { left: 0; }
+  body::after { right: 0; }
+
+  header {
+    text-align: center;
+    padding: 48px 20px 28px;
+    position: relative;
+    z-index: 1;
+  }
+
+  header .eyebrow {
+    color: var(--gold);
+    letter-spacing: 0.18em;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  header h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(42px, 8vw, 76px);
+    letter-spacing: 0.04em;
+    margin: 0;
+    color: var(--ink);
+    text-shadow: 0 0 24px rgba(232, 179, 57, 0.25);
+  }
+
+  header h1 span { color: var(--gold); }
+
+  header p {
+    color: var(--ink-dim);
+    margin-top: 10px;
+    font-size: 14px;
+  }
+
+  main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 28px 80px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* toolbar */
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 16px 20px;
+    margin-bottom: 28px;
+  }
+
+  .search-box {
+    flex: 1;
+    min-width: 220px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 10px 14px;
+  }
+
+  .search-box input {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--ink);
+    font-family: 'Archivo', sans-serif;
+    font-size: 14px;
+  }
+
+  .search-box svg { flex-shrink: 0; opacity: 0.6; }
+
+  .sort-group { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+  .sort-group label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-dim);
+    margin-right: 4px;
+  }
+
+  select, .btn {
+    font-family: 'Archivo', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--surface-2);
+    color: var(--ink);
+    padding: 9px 14px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  select:hover, .btn:hover { border-color: var(--gold-dim); }
+
+  .btn-primary {
+    background: var(--gold);
+    color: #1a1306;
+    border-color: var(--gold);
+  }
+
+  .btn-primary:hover { background: #f0c25a; }
+
+  /* grid of ticket cards */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px;
+  }
+
+  .ticket {
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 0 0 20px;
+    overflow: hidden;
+    transition: transform 0.18s ease, border-color 0.18s ease;
+    animation: rise 0.35s ease backwards;
+  }
+
+  .ticket:hover {
+    transform: translateY(-3px);
+    border-color: var(--gold-dim);
+  }
+
+  .ticket-poster {
+    width: 100%;
+    aspect-ratio: 2 / 3;
+    background: linear-gradient(155deg, var(--surface-2), var(--bg));
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+
+  .ticket-poster img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .ticket-poster .no-poster {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 8px;
+    color: var(--gold-dim);
+  }
+
+  .ticket-poster .no-poster svg { opacity: 0.5; }
+  .ticket-poster .no-poster span {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-dim);
+  }
+
+  .ticket-body { padding: 0 20px; }
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* perforated divider like a real ticket stub */
+  .ticket .perf {
+    position: absolute;
+    left: 0; right: 0;
+    bottom: 56px;
+    height: 0;
+    border-top: 2px dashed var(--line);
+  }
+  .ticket .perf::before, .ticket .perf::after {
+    content: "";
+    position: absolute;
+    top: -8px;
+    width: 16px; height: 16px;
+    background: var(--bg);
+    border-radius: 50%;
+  }
+  .ticket .perf::before { left: -28px; }
+  .ticket .perf::after { right: -28px; }
+
+  .ticket-genre {
+    display: inline-block;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--teal);
+    border: 1px solid rgba(94, 200, 193, 0.35);
+    border-radius: 100px;
+    padding: 3px 10px;
+    margin-bottom: 10px;
+  }
+
+  .ticket-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px;
+    letter-spacing: 0.02em;
+    line-height: 1.15;
+    margin: 0 0 6px;
+    color: var(--ink);
+  }
+
+  .ticket-year { color: var(--ink-dim); font-size: 13px; margin-bottom: 18px; }
+
+  .ticket-footer {
+    margin-top: 18px;
+    padding-top: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .rating {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+  }
+  .rating .num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    color: var(--gold);
+  }
+  .rating .max { font-size: 11px; color: var(--ink-dim); }
+
+  .delete-btn {
+    background: none;
+    border: 1px solid var(--line);
+    color: var(--ink-dim);
+    border-radius: 8px;
+    padding: 6px 10px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.15s ease;
+  }
+  .delete-btn:hover { color: var(--danger); border-color: var(--danger); }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--ink-dim);
+  }
+  .empty-state h3 { color: var(--ink); font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: 0.03em; }
+
+  /* modal */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(3px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    padding: 20px;
+  }
+  .modal-overlay.show { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 28px;
+    width: 100%;
+    max-width: 380px;
+  }
+
+  .modal h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 26px;
+    letter-spacing: 0.03em;
+    margin: 0 0 18px;
+    color: var(--gold);
+  }
+
+  .field { margin-bottom: 14px; }
+  .field label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-dim);
+    margin-bottom: 6px;
+  }
+  .field input {
+    width: 100%;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: var(--ink);
+    font-family: 'Archivo', sans-serif;
+    font-size: 14px;
+    outline: none;
+  }
+  .field input:focus { border-color: var(--gold); }
+
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  .modal-actions .btn { flex: 1; }
+
+  .error-text {
+    color: var(--danger);
+    font-size: 12px;
+    margin-top: 8px;
+    min-height: 16px;
+  }
+
+  .fab {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--gold);
+    color: #1a1306;
+    border: none;
+    font-size: 28px;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(232, 179, 57, 0.35);
+    z-index: 10;
+    transition: transform 0.15s ease;
+  }
+  .fab:hover { transform: scale(1.06) rotate(90deg); }
+
+  :focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ticket, .fab, * { animation: none !important; transition: none !important; }
+  }
+
+  @media (max-width: 600px) {
+    .toolbar { flex-direction: column; align-items: stretch; }
+    .sort-group { justify-content: space-between; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">Now Showing &mdash; Your Collection</div>
+  <h1>Movie<span>Sort</span> Pro</h1>
+  <p id="count-label">Loading your reel&hellip;</p>
+</header>
+
+<main>
+  <div class="toolbar">
+    <div class="search-box">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="search-input" placeholder="Search by title…" autocomplete="off">
+    </div>
+    <div class="sort-group">
+      <label for="sort-key">Sort by</label>
+      <select id="sort-key">
+        <option value="title">Title</option>
+        <option value="year">Year</option>
+        <option value="rating">Rating</option>
+        <option value="genre">Genre</option>
+      </select>
+      <button class="btn" id="sort-btn">Sort</button>
+    </div>
+  </div>
+
+  <div class="grid" id="movie-grid"></div>
+  <div class="empty-state" id="empty-state" style="display:none;">
+    <h3>No movies match</h3>
+    <p>Try a different title, or add one to your collection.</p>
+  </div>
+</main>
+
+<button class="fab" id="add-fab" aria-label="Add movie" title="Add movie">+</button>
+
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <h2>Add a Movie</h2>
+    <form id="add-form">
+      <div class="field">
+        <label for="f-title">Title</label>
+        <input type="text" id="f-title" required>
+      </div>
+      <div class="field">
+        <label for="f-year">Year</label>
+        <input type="number" id="f-year" required min="1888" max="2100">
+      </div>
+      <div class="field">
+        <label for="f-rating">Rating (0&ndash;10)</label>
+        <input type="number" id="f-rating" required min="0" max="10" step="0.1">
+      </div>
+      <div class="field">
+        <label for="f-genre">Genre</label>
+        <input type="text" id="f-genre" required>
+      </div>
+      <div class="error-text" id="form-error"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn" id="cancel-btn">Cancel</button>
+        <button type="submit" class="btn btn-primary">Add to collection</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+let allMovies = [];
+let activeFilter = "";
+
+const grid = document.getElementById('movie-grid');
+const emptyState = document.getElementById('empty-state');
+const countLabel = document.getElementById('count-label');
+
+function renderMovies(list) {
+  grid.innerHTML = "";
+  if (list.length === 0) {
+    emptyState.style.display = "block";
+    grid.style.display = "none";
+    return;
+  }
+  emptyState.style.display = "none";
+  grid.style.display = "grid";
+
+  list.forEach((m, i) => {
+    const card = document.createElement('div');
+    card.className = 'ticket';
+    card.style.animationDelay = (i * 0.03) + 's';
+
+    const posterDiv = document.createElement('div');
+    posterDiv.className = 'ticket-poster';
+
+    if (m.poster) {
+      const img = document.createElement('img');
+      img.src = m.poster;
+      img.alt = m.title + ' poster';
+      img.loading = 'lazy';
+      img.onerror = () => { posterDiv.innerHTML = noPosterSvg(); };
+      posterDiv.appendChild(img);
+    } else {
+      posterDiv.innerHTML = noPosterSvg();
+    }
+
+    const body = document.createElement('div');
+    body.className = 'ticket-body';
+    body.innerHTML = `
+        <span class="ticket-genre">${escapeHtml(m.genre)}</span>
+        <h3 class="ticket-title">${escapeHtml(m.title)}</h3>
+        <div class="ticket-year">${m.year}</div>
+        <div class="perf"></div>
+        <div class="ticket-footer">
+          <div class="rating"><span class="num">${m.rating}</span><span class="max">/10</span></div>
+          <button class="delete-btn" data-title="${escapeHtml(m.title)}">Remove</button>
+        </div>
+    `;
+
+    card.appendChild(posterDiv);
+    card.appendChild(body);
+    grid.appendChild(card);
+  });
+
+  grid.querySelectorAll('.delete-btn').forEach(btn => {
+    btn.addEventListener('click', () => deleteMovie(btn.dataset.title));
+  });
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function noPosterSvg() {
+  return `<div class="no-poster">
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+    <span>No poster</span>
+  </div>`;
+}
+
+function updateCountLabel() {
+  const n = allMovies.length;
+  countLabel.textContent = n === 0
+    ? "Your collection is empty — add your first movie"
+    : `${n} movie${n === 1 ? '' : 's'} in your collection`;
+}
+
+function applyFilter() {
+  if (!activeFilter) {
+    renderMovies(allMovies);
+    return;
+  }
+  const f = activeFilter.toLowerCase();
+  renderMovies(allMovies.filter(m => m.title.toLowerCase().includes(f)));
+}
+
+async function loadMovies() {
+  const res = await fetch('/api/movies');
+  allMovies = await res.json();
+  updateCountLabel();
+  applyFilter();
+}
+
+async function deleteMovie(title) {
+  await fetch('/api/movies/' + encodeURIComponent(title), { method: 'DELETE' });
+  await loadMovies();
+}
+
+document.getElementById('search-input').addEventListener('input', (e) => {
+  activeFilter = e.target.value;
+  applyFilter();
+});
+
+document.getElementById('sort-btn').addEventListener('click', async () => {
+  const key = document.getElementById('sort-key').value;
+  await fetch('/api/sort', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ key })
+  });
+  await loadMovies();
+});
+
+const modalOverlay = document.getElementById('modal-overlay');
+const addFab = document.getElementById('add-fab');
+const cancelBtn = document.getElementById('cancel-btn');
+const addForm = document.getElementById('add-form');
+const formError = document.getElementById('form-error');
+
+addFab.addEventListener('click', () => {
+  formError.textContent = "";
+  addForm.reset();
+  modalOverlay.classList.add('show');
+  document.getElementById('f-title').focus();
+});
+
+cancelBtn.addEventListener('click', () => modalOverlay.classList.remove('show'));
+modalOverlay.addEventListener('click', (e) => {
+  if (e.target === modalOverlay) modalOverlay.classList.remove('show');
+});
+
+addForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const payload = {
+    title: document.getElementById('f-title').value.trim(),
+    year: document.getElementById('f-year').value,
+    rating: document.getElementById('f-rating').value,
+    genre: document.getElementById('f-genre').value.trim()
+  };
+  const res = await fetch('/api/movies', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  const data = await res.json();
+  if (data.success) {
+    modalOverlay.classList.remove('show');
+    await loadMovies();
+  } else {
+    formError.textContent = data.error || "Couldn't add that movie. Check the fields.";
+  }
+});
+
+loadMovies();
+</script>
+
+</body>
+</html>
