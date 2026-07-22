@@ -10,6 +10,13 @@ A full-stack movie discovery and recommendation platform powered by AI. Search, 
 
 ---
 
+## 🔗 Live Demo
+
+- **Frontend:** [movie-pro-theta.vercel.app](https://movie-pro-theta.vercel.app)
+- **Backend API:** [movie-pro-production.up.railway.app](https://movie-pro-production.up.railway.app)
+
+---
+
 ## ✨ Features
 
 - 🔍 **Movie Search & Discovery** — Search and browse movies using live data from TMDB
